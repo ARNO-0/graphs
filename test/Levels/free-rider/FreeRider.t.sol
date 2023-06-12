@@ -9,6 +9,7 @@ import {IUniswapV2Router02, IUniswapV2Factory, IUniswapV2Pair} from "../../../sr
 import {DamnValuableNFT} from "../../../src/Contracts/DamnValuableNFT.sol";
 import {DamnValuableToken} from "../../../src/Contracts/DamnValuableToken.sol";
 import {WETH9} from "../../../src/Contracts/WETH9.sol";
+import {AttackerContract} from "../../../src/Contracts/free-rider/solution/AttackContract.sol";
 
 contract FreeRider is Test {
     // The NFT marketplace will have 6 tokens, at 15 ETH each
@@ -135,6 +136,14 @@ contract FreeRider is Test {
          * EXPLOIT START *
          */
         vm.startPrank(attacker, attacker);
+        AttackerContract attackerContract = new AttackerContract(
+            address(uniswapV2Pair),
+            address(weth),
+            address(freeRiderNFTMarketplace),
+            address(freeRiderBuyer),
+            address(damnValuableNFT)
+        );
+        attackerContract.attack();
 
         vm.stopPrank();
         /**

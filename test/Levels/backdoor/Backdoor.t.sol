@@ -8,6 +8,7 @@ import {DamnValuableToken} from "../../../src/Contracts/DamnValuableToken.sol";
 import {WalletRegistry} from "../../../src/Contracts/backdoor/WalletRegistry.sol";
 import {GnosisSafe} from "gnosis/GnosisSafe.sol";
 import {GnosisSafeProxyFactory} from "gnosis/proxies/GnosisSafeProxyFactory.sol";
+import {AttackerContract} from "../../../src/Contracts/backdoor/solution/AttackContract.sol";
 
 contract Backdoor is Test {
     uint256 internal constant AMOUNT_TOKENS_DISTRIBUTED = 40e18;
@@ -79,6 +80,15 @@ contract Backdoor is Test {
         /**
          * EXPLOIT START *
          */
+        vm.startPrank(attacker);
+        new AttackerContract(
+            walletRegistry,
+            address(masterCopy),
+            address(walletFactory),
+            dvt,
+            users
+        );
+        vm.stopPrank();
 
         /**
          * EXPLOIT END *

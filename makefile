@@ -1,3 +1,5 @@
+-include .env
+
 Unstoppable: 
 	forge test --match-test testExploit --match-contract Unstoppable
 

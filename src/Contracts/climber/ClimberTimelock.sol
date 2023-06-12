@@ -3,11 +3,12 @@ pragma solidity 0.8.17;
 
 import {AccessControl} from "openzeppelin-contracts/access/AccessControl.sol";
 import {Address} from "openzeppelin-contracts/utils/Address.sol";
-
+import "forge-std/console.sol";
 /**
  * @title ClimberTimelock
  * @author Damn Vulnerable DeFi (https://damnvulnerabledefi.xyz)
  */
+
 contract ClimberTimelock is AccessControl {
     using Address for address;
 
@@ -82,6 +83,7 @@ contract ClimberTimelock is AccessControl {
         require(getOperationState(id) == OperationState.Unknown, "Operation already known");
 
         operations[id].readyAtTimestamp = uint64(block.timestamp) + delay;
+
         operations[id].known = true;
     }
 
@@ -102,7 +104,7 @@ contract ClimberTimelock is AccessControl {
             targets[i].functionCallWithValue(dataElements[i], values[i]);
         }
 
-        require(getOperationState(id) == OperationState.ReadyForExecution);
+        require(getOperationState(id) == OperationState.ReadyForExecution, "Operation is not ready for execution");
         operations[id].executed = true;
     }
 

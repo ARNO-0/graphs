@@ -4,11 +4,12 @@ pragma solidity 0.8.17;
 import {RewardToken} from "./RewardToken.sol";
 import {DamnValuableToken} from "../DamnValuableToken.sol";
 import {AccountingToken} from "./AccountingToken.sol";
-
+import "forge-std/console.sol";
 /**
  * @title TheRewarderPool
  * @author Damn Vulnerable DeFi (https://damnvulnerabledefi.xyz)
  */
+
 contract TheRewarderPool {
     // Minimum duration of each round of rewards in seconds
     uint256 private constant REWARDS_ROUND_MIN_DURATION = 5 days;
@@ -64,8 +65,10 @@ contract TheRewarderPool {
 
     function distributeRewards() public returns (uint256) {
         uint256 rewards = 0;
-
+        bool success;
         if (isNewRewardsRound()) {
+            success = isNewRewardsRound();
+
             _recordSnapshot();
         }
 

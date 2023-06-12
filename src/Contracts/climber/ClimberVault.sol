@@ -7,6 +7,7 @@ import {UUPSUpgradeable} from "openzeppelin-contracts-upgradeable/proxy/utils/UU
 import {IERC20} from "openzeppelin-contracts/token/ERC20/IERC20.sol";
 
 import {ClimberTimelock} from "./ClimberTimelock.sol";
+import {ClimberVault} from "./ClimberVault.sol";
 
 /**
  * @title ClimberVault

